@@ -1,9 +1,9 @@
 use macroquad::prelude::*;
 use std::{thread, time::Duration};
 
-const BOARD_HEIGHT: usize = 30;
-const BOARD_WIDTH: usize = 30;
-const CELL_SIZE: f32 = 30.;
+const BOARD_HEIGHT: usize = 10;
+const BOARD_WIDTH: usize = 10;
+const CELL_SIZE: f32 = 75.;
 
 const AROUND_POSITIONS: [[i8; 2]; 8] = [
     [-1, -1],
@@ -85,7 +85,7 @@ fn update_board(board: &mut Matrix) {
                     alive_neighbors.to_string().as_str(),
                     (row as f32 * CELL_SIZE) + (CELL_SIZE / 3.),
                     (col as f32 * CELL_SIZE) + (CELL_SIZE / 1.5),
-                    25.0,
+                    CELL_SIZE * 0.5,
                     text_color,
                 );
             }
@@ -114,7 +114,8 @@ async fn main() {
     let mut board: Matrix = [[0; BOARD_WIDTH]; BOARD_HEIGHT];
 
     for [row, col] in INITIAL_CELLS {
-        board[BOARD_HEIGHT / 2 + row][BOARD_WIDTH / 2 + col] = 1;
+        board[row][col] = 1;
+        // board[BOARD_HEIGHT / 2 + row][BOARD_WIDTH / 2 + col] = 1;
     }
 
     let frame_time = get_frame_time();
@@ -125,6 +126,6 @@ async fn main() {
         update_board(&mut board);
         next_frame().await;
 
-        set_fps_limit(frame_time, 5.0);
+        set_fps_limit(frame_time, 0.3);
     }
 }
