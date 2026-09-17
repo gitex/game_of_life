@@ -55,6 +55,60 @@ fn get_alive_neighbors(matrix: Matrix, row: Row, col: Column) -> usize {
     return alive;
 }
 
+fn draw_board(board: Matrix) {
+    for row in 0..BOARD_HEIGHT {
+        for col in 0..BOARD_WIDTH {
+            if board[row][col] == 1 {
+                draw_rectangle(
+                    row as f32 * CELL_SIZE,
+                    col as f32 * CELL_SIZE,
+                    CELL_SIZE,
+                    CELL_SIZE,
+                    BLACK,
+                )
+            }
+        }
+    }
+}
+
+fn update_board(board: &mut Matrix) {
+    let mut new_board = board.clone();
+
+    for row in 0..BOARD_HEIGHT {
+        for col in 0..BOARD_WIDTH {
+            let alive_neighbors: usize = get_alive_neighbors(*board, row, col);
+            let current_is_alive = board[row][col] == 1;
+
+            if alive_neighbors > 0 {
+                let text_color = if current_is_alive { WHITE } else { BLACK };
+                draw_text(
+                    alive_neighbors.to_string().as_str(),
+                    (row as f32 * CELL_SIZE) + (CELL_SIZE / 3.),
+                    (col as f32 * CELL_SIZE) + (CELL_SIZE / 1.5),
+                    25.0,
+                    text_color,
+                );
+            }
+
+            if current_is_alive {
+                new_board[row][col] = (alive_neighbors == 2 || alive_neighbors == 3) as u8;
+            } else {
+                new_board[row][col] = (alive_neighbors == 3) as u8;
+            }
+        }
+    }
+    *board = new_board;
+}
+
+fn set_fps_limit(frame_time: f32, fps: f32) {
+    let minimum_frame_time = 1. / fps;
+
+    if frame_time < minimum_frame_time {
+        let time_to_sleep = (minimum_frame_time - frame_time) * 1000.;
+        std::thread::sleep(std::time::Duration::from_millis(time_to_sleep as u64));
+    }
+}
+
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut board: Matrix = [[0; BOARD_WIDTH]; BOARD_HEIGHT];
@@ -63,59 +117,14 @@ async fn main() {
         board[BOARD_HEIGHT / 2 + row][BOARD_WIDTH / 2 + col] = 1;
     }
 
-    let minimum_frame_time = 10. / 2.;
     let frame_time = get_frame_time();
 
     loop {
         clear_background(WHITE);
-
-        for row in 0..BOARD_HEIGHT {
-            for col in 0..BOARD_WIDTH {
-                if board[row][col] == 1 {
-                    draw_rectangle(
-                        row as f32 * CELL_SIZE,
-                        col as f32 * CELL_SIZE,
-                        CELL_SIZE,
-                        CELL_SIZE,
-                        BLACK,
-                    )
-                }
-            }
-        }
-
-        let mut new_board = board.clone();
-
-        for row in 0..BOARD_HEIGHT {
-            for col in 0..BOARD_WIDTH {
-                let alive_neighbors: usize = get_alive_neighbors(board, row, col);
-                let current_cell_alive = board[row][col] == 1;
-
-                let text_color = if current_cell_alive { WHITE } else { BLACK };
-
-                if alive_neighbors > 0 {
-                    draw_text(
-                        alive_neighbors.to_string().as_str(),
-                        (row as f32 * CELL_SIZE) + (CELL_SIZE / 3.),
-                        (col as f32 * CELL_SIZE) + (CELL_SIZE / 1.5),
-                        25.0,
-                        text_color,
-                    );
-                }
-
-                if current_cell_alive {
-                    new_board[row][col] = (alive_neighbors == 2 || alive_neighbors == 3) as u8;
-                } else {
-                    new_board[row][col] = (alive_neighbors == 3) as u8;
-                }
-            }
-        }
-        board = new_board;
-
+        draw_board(board);
+        update_board(&mut board);
         next_frame().await;
 
-        if frame_time < minimum_frame_time {
-            let time_to_sleep = (minimum_frame_time - frame_time) * 1000.;
-            std::thread::sleep(std::time::Duration::from_millis(time_to_sleep as u64));
-        }
+        set_fps_limit(frame_time, 5.0);
     }
 }
