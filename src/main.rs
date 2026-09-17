@@ -29,18 +29,15 @@ fn window_conf() -> Conf {
 }
 
 type Matrix = [[u8; BOARD_WIDTH]; BOARD_HEIGHT];
+type Row = usize;
+type Column = usize;
 
-struct Cell {
-    row: usize,
-    col: usize,
-}
-
-fn get_alive_neighbors(matrix: Matrix, cell: Cell) -> usize {
+fn get_alive_neighbors(matrix: Matrix, row: Row, col: Column) -> usize {
     let mut alive: usize = 0;
 
-    for [row, col] in AROUND_POSITIONS {
-        let current_row: i8 = cell.row as i8 + row;
-        let current_col: i8 = cell.col as i8 + col;
+    for [diff_row, diff_col] in AROUND_POSITIONS {
+        let current_row: i8 = row as i8 + diff_row;
+        let current_col: i8 = col as i8 + diff_col;
 
         if (current_row < 0) || (current_row as usize >= BOARD_HEIGHT) {
             continue;
@@ -90,8 +87,7 @@ async fn main() {
 
         for row in 0..BOARD_HEIGHT {
             for col in 0..BOARD_WIDTH {
-                let cell = Cell { row, col };
-                let alive_neighbors: usize = get_alive_neighbors(board, cell);
+                let alive_neighbors: usize = get_alive_neighbors(board, row, col);
                 let current_cell_alive = board[row][col] == 1;
 
                 let text_color = if current_cell_alive { WHITE } else { BLACK };
